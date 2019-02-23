@@ -1,1 +1,17 @@
-{version: "2.1", description: "An orb for builds using the unmock JavaScript SDK."}
+version: 2.1
+description: "Use unmock to mock API integrations in your CircleCI builds."
+
+commands:
+  credentials:
+    description: "Creates an unmock credentials file"
+    parameters:
+      key:
+        type: string
+        description: "Your unmock API key.  To retrieve your key, visit https://unmock.io/app."
+      root:
+        type: string
+        default: "."
+        description: "The directory to which the unmock credentials file will be written.  Normally this is the root directory of your project."
+    steps:
+      - run: cd << parameters.root >> && mkdir -p .unmock && echo "[unmock]\ntoken=<< parameters.key >>\n" > .unmock/credentials
+
