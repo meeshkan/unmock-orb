@@ -5,13 +5,14 @@ commands:
   credentials:
     description: "Creates an unmock credentials file"
     parameters:
-      key:
+      token:
         type: string
-        description: "Your unmock API key.  To retrieve your key, visit https://unmock.io/app."
+        description: "Your unmock API token.  To retrieve your token, visit https://unmock.io/app."
       root:
         type: string
         default: "."
         description: "The directory to which the unmock credentials file will be written.  Normally this is the root directory of your project."
     steps:
-      - run: cd << parameters.root >> && mkdir -p .unmock && echo "[unmock]\ntoken=<< parameters.key >>\n" > .unmock/credentials
+      - run: cd << parameters.root >> && mkdir -p .unmock && printf "[unmock]\ntoken=<< parameters.token >>\n" > .unmock/credentials
+      - run: cat .unmock/credentials
 
