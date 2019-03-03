@@ -6,7 +6,7 @@ commands:
     description: "Creates an unmock credentials file"
     parameters:
       token:
-        type: string
+        type: env_var_name
         description: "Your unmock API token.  To retrieve your token, visit https://unmock.io/app."
       root:
         type: string
@@ -16,3 +16,40 @@ commands:
       - run: cd << parameters.root >> && mkdir -p .unmock && printf "[unmock]\ntoken=<< parameters.token >>\n" > .unmock/credentials
       - run: cat .unmock/credentials
 
+examples:
+  credentials:
+    description: Setting your unmock credentials for a project
+    usage:
+      version: 2.1
+      orbs:
+        unmock: unmock/unmock@0.0.7
+      jobs:
+        build:
+          docker:
+            # specify the version you desire here
+            - image: circleci/node:10.15.1
+
+          working_directory: ~/repo
+
+          steps:
+            - checkout
+
+            # Download and cache dependencies
+            - restore_cache:
+                keys:
+                  - v1-dependencies-{{ checksum "package.json" }}
+                  # fallback to using the latest cache if no exact match is found
+                  - v1-dependencies-
+
+            - unmock/credentials:
+                token: ${UNMOCK_TOKEN}
+
+            - run: yarn install
+
+            - save_cache:
+                paths:
+                  - node_modules
+                key: v1-dependencies-{{ checksum "package.json" }}
+
+            # run tests!
+            - run: yarn test
