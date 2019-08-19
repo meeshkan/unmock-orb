@@ -1,5 +1,8 @@
 version: 2.1
-description: "Use unmock to mock API integrations in your CircleCI builds."
+description: >
+  Use unmock to mock API integrations in your CircleCI builds.
+  Repo Home: https://github.com/unmock/unmock-orb
+  Website: https://www.unmock.io/
 
 commands:
   credentials:
