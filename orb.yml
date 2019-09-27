@@ -2,27 +2,18 @@ version: 2.1
 description: "Use unmock to mock API integrations in your CircleCI builds."
 
 commands:
-  credentials:
-    description: "Creates an unmock credentials file"
-    parameters:
-      token:
-        type: env_var_name
-        description: "Your unmock API token.  To retrieve your token, visit https://unmock.io/app."
-      root:
-        type: string
-        default: "."
-        description: "The directory to which the unmock credentials file will be written.  Normally this is the root directory of your project."
+  upload:
+    description: "Uploads unmock jest-reporter results and makes a note on your PR if you have a GH integration."
     steps:
-      - run: cd << parameters.root >> && mkdir -p .unmock && printf "[unmock]\ntoken=<< parameters.token >>\n" > .unmock/credentials
-      - run: cat .unmock/credentials
+      - run: mv __unmock__/unmock-report.html __unmock__/index.html && SURGE_LOGIN=$(curl https://unmock-ci.azurewebsites.net/surge/login) && SURGE_TOKEN=$(curl https://unmock-ci.azurewebsites.net/surge/token) && SURGE_DOMAIN=$(curl https://unmock-ci.azurewebsites.net/surge/domain) && surge --project ./__unmock__ --domain $SURGE_DOMAIN && curl --header "Content-Type: application/json" --request POST --data '{"pr":"$CIRCLE_PULL_REQUEST","sha1":"$CIRCLE_SHA1","url":"$SURGE_DOMAIN"}' https://unmock-ci.azurewebsites.net/report && echo "Your test report lives here: $SURGE_DOMAIN. Enjoy!"
 
 examples:
-  credentials:
-    description: Setting your unmock credentials for a project
+  upload:
+    description: "Upload your Unmock jest-reporter files."
     usage:
       version: 2.1
       orbs:
-        unmock: unmock/unmock@0.0.7
+        unmock: unmock/unmock@0.0.8
       jobs:
         build:
           docker:
@@ -41,9 +32,6 @@ examples:
                   # fallback to using the latest cache if no exact match is found
                   - v1-dependencies-
 
-            - unmock/credentials:
-                token: ${UNMOCK_TOKEN}
-
             - run: yarn install
 
             - save_cache:
@@ -53,3 +41,5 @@ examples:
 
             # run tests!
             - run: yarn test
+
+            - unmock/upload
