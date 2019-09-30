@@ -5,7 +5,26 @@ commands:
   upload:
     description: "Uploads unmock jest-reporter results and makes a note on your PR if you have a GH integration."
     steps:
-      - run: mv __unmock__/unmock-report.html __unmock__/index.html && SURGE_LOGIN=$(curl https://unmock-ci.azurewebsites.net/surge/login) && SURGE_TOKEN=$(curl https://unmock-ci.azurewebsites.net/surge/token) && SURGE_DOMAIN=$(curl https://unmock-ci.azurewebsites.net/surge/domain) && surge --project ./__unmock__ --domain $SURGE_DOMAIN && curl --header "Content-Type: application/json" --request POST --data '{"pr":"$CIRCLE_PULL_REQUEST","sha1":"$CIRCLE_SHA1","url":"$SURGE_DOMAIN"}' https://unmock-ci.azurewebsites.net/report && echo "Your test report lives here: $SURGE_DOMAIN. Enjoy!"
+      - run:
+          name: Set exits
+          command: |
+            # Exit script if you try to use an uninitialized variable.
+            set -o nounset
+
+            # Exit script if a statement returns a non-true return value.
+            set -o errexit
+
+            # Use the error status of the first failure, rather than that of the last item in a pipeline.
+            set -o pipefail
+      - run:
+          name: Rename file
+          command: |
+            mv __unmock__/unmock-report.html __unmock__/index.html
+      - run:
+          name: Upload file and post notification
+          command: |
+            REPORT_URL=$(curl -F 'html=@__unmock__/index.html' https://unmock-ci.azurewebsites.net/reports)
+            curl --header "Content-Type: application/json" --request POST --data '{"pr":"$CIRCLE_PULL_REQUEST","sha1":"$CIRCLE_SHA1","url":"$REPORT_URL"}' https://unmock-ci.azurewebsites.net/report && echo "Your test report lives here: $REPORT_URL. Enjoy!"
 
 examples:
   upload:
