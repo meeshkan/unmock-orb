@@ -1,0 +1,13 @@
+version: 2.1
+orbs:
+  orb-tools: circleci/orb-tools@8.27.4
+jobs:
+  build:
+    docker:
+      - image: debian:stretch
+    steps:
+      - checkout
+      - orb-tools/lint
+      - orb-tools/pack:
+          requires:
+            - orb-tools/lint
