@@ -5,27 +5,37 @@ description: >
   Website: https://www.unmock.io/
 
 commands:
-  credentials:
-    description: "Creates an unmock credentials file"
-    parameters:
-      token:
-        type: env_var_name
-        description: "Your unmock API token.  To retrieve your token, visit https://unmock.io/app."
-      root:
-        type: string
-        default: "."
-        description: "The directory to which the unmock credentials file will be written.  Normally this is the root directory of your project."
+  upload:
+    description: "Uploads unmock jest-reporter results and makes a note on your PR if you have a GH integration."
     steps:
-      - run: cd << parameters.root >> && mkdir -p .unmock && printf "[unmock]\ntoken=<< parameters.token >>\n" > .unmock/credentials
-      - run: cat .unmock/credentials
+      - run:
+          name: Set exits
+          command: |
+            # Exit script if you try to use an uninitialized variable.
+            set -o nounset
+
+            # Exit script if a statement returns a non-true return value.
+            set -o errexit
+
+            # Use the error status of the first failure, rather than that of the last item in a pipeline.
+            set -o pipefail
+      - run:
+          name: Rename file
+          command: |
+            mv __unmock__/unmock-report.html __unmock__/index.html
+      - run:
+          name: Upload file and post notification
+          command: |
+            REPORT_URL=$(curl -F 'html=@__unmock__/index.html' https://unmock-ci.azurewebsites.net/reports)
+            curl --header "Content-Type: application/json" --request POST --data '{"pr":"$CIRCLE_PULL_REQUEST","sha1":"$CIRCLE_SHA1","url":"$REPORT_URL"}' https://unmock-ci.azurewebsites.net/report && echo "Your test report lives here: $REPORT_URL. Enjoy!"
 
 examples:
-  credentials:
-    description: Setting your unmock credentials for a project
+  upload:
+    description: "Upload your Unmock jest-reporter files."
     usage:
       version: 2.1
       orbs:
-        unmock: unmock/unmock@0.0.7
+        unmock: unmock/unmock@0.0.8
       jobs:
         build:
           docker:
@@ -44,9 +54,6 @@ examples:
                   # fallback to using the latest cache if no exact match is found
                   - v1-dependencies-
 
-            - unmock/credentials:
-                token: ${UNMOCK_TOKEN}
-
             - run: yarn install
 
             - save_cache:
@@ -56,3 +63,4 @@ examples:
 
             # run tests!
             - run: yarn test
+            - unmock/upload
