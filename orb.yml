@@ -28,7 +28,7 @@ commands:
           command: |
             REPORT_URL=$(curl -F 'html=@__unmock__/index.html' https://unmock-ci.azurewebsites.net/reports)
             echo "Uploaded the report to $REPORT_URL"
-            curl --header "Content-Type: application/json" --request POST --data '{"pr":"$CIRCLE_PULL_REQUEST","sha1":"$CIRCLE_SHA1","url":"$REPORT_URL"}' https://unmock-ci.azurewebsites.net/report
+            curl --header "Content-Type: application/json" --request POST --data '{"pr":"'"$CIRCLE_PULL_REQUEST"'","sha1":"'"$CIRCLE_SHA1"'","url":"'"$REPORT_URL"'"}' https://unmock-ci.azurewebsites.net/report
             echo "Your test report lives here: $REPORT_URL. Enjoy!"
 
 examples:
