@@ -20,15 +20,11 @@ commands:
             # Use the error status of the first failure, rather than that of the last item in a pipeline.
             set -o pipefail
       - run:
-          name: Rename file
-          command: |
-            mv __unmock__/unmock-report.html __unmock__/index.html
-      - run:
           name: Upload file and post notification
           command: |
-            REPORT_URL=$(curl -F 'html=@__unmock__/index.html' https://unmock-ci.azurewebsites.net/reports)
+            REPORT_URL=$(curl -F 'html=@__unmock__/unmock-report.html' https://unmock-ci.azurewebsites.net/reports)
             echo "Uploaded the report to $REPORT_URL"
-            curl --header "Content-Type: application/json" --request POST --data '{"pr":"'"$CIRCLE_PULL_REQUEST"'","sha1":"'"$CIRCLE_SHA1"'","url":"'"$REPORT_URL"'"}' https://unmock-ci.azurewebsites.net/report
+            if [ ! -z $CIRCLE_PULL_REQUEST ]; then curl --header "Content-Type: application/json" --request POST --data '{"pr":"'"$CIRCLE_PULL_REQUEST"'","sha1":"'"$CIRCLE_SHA1"'","url":"'"$REPORT_URL"'"}' https://unmock-ci.azurewebsites.net/notifications/github; fi
             echo "Your test report lives here: $REPORT_URL. Enjoy!"
 
 examples:
