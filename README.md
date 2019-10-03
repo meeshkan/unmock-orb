@@ -25,5 +25,13 @@ circleci orb validate orb.yml
 Publish a development version:
 
 ```bash
-circleci orb publish orb.yml unmock/unmock@dev:alpha:0.0.X
+circleci orb publish orb.yml unmock/unmock@dev:0.0.X
+```
+
+Publish a production version:
+
+```bash
+circleci orb publish orb.yml unmock/unmock@0.0.x
+git tag -a "v0.0.x" -m "v0.0.x"
+git push origin v0.0.x
 ```
