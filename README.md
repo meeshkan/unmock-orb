@@ -35,3 +35,10 @@ circleci orb publish orb.yml unmock/unmock@0.0.x
 git tag -a "v0.0.x" -m "v0.0.x"
 git push origin v0.0.x
 ```
+
+Alternatively, you can use `promote` command to promote a development version to a semantic release:
+
+```bash
+circleci orb publish promote unmock/unmock@dev:0.0.x patch
+# Push git tags as above
+```
