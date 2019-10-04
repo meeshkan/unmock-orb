@@ -6,7 +6,7 @@ description: >
 
 commands:
   upload:
-    description: "Uploads unmock jest-reporter results and makes a note on your PR if you have a GH integration. The orb is in early alpha stage, and its usage should be considered experimental and it will be subject to frequent API changes and updates in successive versions. Any and all feedback is appreciated!"
+    description: "Uploads unmock jest-reporter results and makes a note on your PR if you have a GH integration. The orb is in early alpha stage, and its usage should be considered experimental. Note that the uploaded report will be publicly available on the internet. If your tests in CircleCI use real API keys or tokens for HTTP requests, this orb is not (yet) for you. Any and all feedback is appreciated!"
     steps:
       - run:
           name: Set exits
