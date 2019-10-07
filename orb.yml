@@ -10,6 +10,7 @@ commands:
     parameters:
       file:
         type: string
+        description: "Path to test report"
         default: "__unmock__/unmock-report.html"
     steps:
       - run:
