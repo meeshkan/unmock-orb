@@ -53,7 +53,7 @@ commands:
             echo "Your report lives here: ${REPORT_ARTIFACT_URL}"
             echo "export REPORT_ARTIFACT_URL=${REPORT_ARTIFACT_URL}" >> $BASH_ENV
       - run:
-          name: Post notification
+          name: Post notification to the pull request if Unmock GitHub app is installed
           command: |
             set -o errexit
             set -o pipefail
@@ -64,7 +64,7 @@ commands:
               exit 0;
             fi
 
-            # If running for a pull-request, try sending a notification
+            # Try sending a notification if pull-request, allow failure.
             if [ ! -z ${CIRCLE_PULL_REQUEST} ];
             then
               REPLY_CODE=$(curl -i --header "Content-Type: application/json" --request POST --data '{"pr":"'"${CIRCLE_PULL_REQUEST}"'","sha1":"'"${CIRCLE_SHA1}"'","url":"'"${REPORT_ARTIFACT_URL}"'"}' https://unmock-ci.azurewebsites.net/notifications/github |
@@ -89,7 +89,7 @@ examples:
     usage:
       version: 2.1
       orbs:
-        unmock: unmock/unmock@0.0.8
+        unmock: unmock/unmock@volatile
       jobs:
         build:
           docker:
