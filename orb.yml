@@ -73,7 +73,7 @@ commands:
 
               if [ ! ${REPLY_CODE} == 200 ];
               then
-                echo "Failed sending notification, got reply with code: ${REPLY_CODE}";
+                echo "Failed sending notification with code ${REPLY_CODE}.";
               else
                 echo "Sent notification."
               fi;
