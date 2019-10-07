@@ -50,7 +50,7 @@ commands:
             BUILD_ARTIFACTS_URL=https://circleci.com/api/v1.1/project/github/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/${CIRCLE_BUILD_NUM}/artifacts
             echo "Fetching artifact URL from: ${BUILD_ARTIFACTS_URL}"
             REPORT_ARTIFACT_URL=$(curl --fail ${BUILD_ARTIFACTS_URL} | jq .[0].url)  # TODO Handle multiple artifacts
-            echo "Your report lives here: ${REPORT_ARTIFACT_URL}"
+            echo "Your report lives here: ${REPORT_ARTIFACT_URL}. Enjoy!"
             echo "export REPORT_ARTIFACT_URL=${REPORT_ARTIFACT_URL}" >> $BASH_ENV
       - run:
           name: Post notification to the pull request if Unmock GitHub app is installed
@@ -81,7 +81,6 @@ commands:
             else
               echo "Not a pull-request, skipping sending notification."
             fi
-            echo "Your test report lives here: ${REPORT_ARTIFACT_URL}. Enjoy!"
 
 examples:
   upload:
