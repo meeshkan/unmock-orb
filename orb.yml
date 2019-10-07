@@ -9,27 +9,40 @@ commands:
     description: "Uploads unmock jest-reporter results and makes a note on your PR if you have a GH integration. The orb is in early alpha stage, and its usage should be considered experimental. Note that the uploaded report will be publicly available on the internet. If your tests in CircleCI use real API keys or tokens for HTTP requests, this orb is not (yet) for you. Any and all feedback is appreciated!"
     steps:
       - run:
-          name: Set exits
+          name: Upload file and post notification
           command: |
-            # Exit script if you try to use an uninitialized variable.
-            set -o nounset
-
             # Exit script if a statement returns a non-true return value.
             set -o errexit
 
             # Use the error status of the first failure, rather than that of the last item in a pipeline.
             set -o pipefail
-      - run:
-          name: Upload file and post notification
-          command: |
+
+            # Post the report and save URL
             REPORT_URL=$(curl -F 'html=@__unmock__/unmock-report.html' https://unmock-ci.azurewebsites.net/reports)
-            echo "Uploaded the report to $REPORT_URL"
-            if [ ! -z $CIRCLE_PULL_REQUEST ]; then curl --header "Content-Type: application/json" --request POST --data '{"pr":"'"$CIRCLE_PULL_REQUEST"'","sha1":"'"$CIRCLE_SHA1"'","url":"'"$REPORT_URL"'"}' https://unmock-ci.azurewebsites.net/notifications/github; fi
-            echo "Your test report lives here: $REPORT_URL. Enjoy!"
+            echo "Uploaded the report to ${REPORT_URL}"
+
+            # If running for a pull-request, try sending a notification
+            if [ ! -z ${CIRCLE_PULL_REQUEST} ];
+            then
+              REPLY_CODE=$(curl -i --header "Content-Type: application/json" --request POST --data '{"pr":"'"${CIRCLE_PULL_REQUEST}"'","sha1":"'"${CIRCLE_SHA1}"'","url":"'"${REPORT_URL}"'"}' https://unmock-ci.azurewebsites.net/notifications/github |
+              head -n 1 |  # Keep first line of response
+              cut -d$' ' -f2)  # Split the line and take the second value (status code)
+
+              if [ ! ${REPLY_CODE} == 200 ];
+              then
+                echo "Failed sending notification, got reply with code: ${REPLY_CODE}";
+              else
+                echo "Sent notification."
+              fi;
+
+            else
+              echo "Not a pull-request, skipping sending notification."
+            fi
+            echo "Your test report lives here: ${REPORT_URL}. Enjoy!"
 
 examples:
   upload:
-    description: "Upload your Unmock jest-reporter files."
+    description: "Upload your Unmock test reporter files."
     usage:
       version: 2.1
       orbs:
