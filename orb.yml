@@ -42,9 +42,10 @@ commands:
           path: << parameters.file >>
       - jq/install
       - run:
-        command: |
-          ARTIFACTS_URL=https://circleci.com/api/v1.1/project/github/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/${CIRCLE_BUILD_NUM}/artifacts
-          echo "URL: ${ARTIFACTS_URL}"
+          name: "Build artifacts URL"
+          command: |
+            ARTIFACTS_URL=https://circleci.com/api/v1.1/project/github/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/${CIRCLE_BUILD_NUM}/artifacts
+            echo "URL: ${ARTIFACTS_URL}"
   upload:
     description: "Uploads unmock jest-reporter results and makes a note on your PR if you have a GH integration. The orb is in early alpha stage, and its usage should be considered experimental. Note that the uploaded report will be publicly available on the internet. If your tests in CircleCI use real API keys or tokens for HTTP requests, this orb is not (yet) for you. Any and all feedback is appreciated!"
     parameters: *parameters
@@ -62,6 +63,8 @@ commands:
 
             # Use the error status of the first failure, rather than that of the last item in a pipeline.
             set -o pipefail
+
+            REPORT_FILE=<< parameters.file >>
 
             # Post the report and save URL
             REPORT_URL=$(curl -F 'html=@"'"${REPORT_FILE}"'"' https://unmock-ci.azurewebsites.net/reports)
