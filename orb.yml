@@ -7,6 +7,10 @@ description: >
 commands:
   upload:
     description: "Uploads unmock jest-reporter results and makes a note on your PR if you have a GH integration. The orb is in early alpha stage, and its usage should be considered experimental. Note that the uploaded report will be publicly available on the internet. If your tests in CircleCI use real API keys or tokens for HTTP requests, this orb is not (yet) for you. Any and all feedback is appreciated!"
+    parameters:
+      file:
+        type: string
+        default: "__unmock__/unmock-report.html"
     steps:
       - run:
           name: Upload file and post notification
@@ -17,8 +21,24 @@ commands:
             # Use the error status of the first failure, rather than that of the last item in a pipeline.
             set -o pipefail
 
+            REPORT_FILE=<< parameters.file >>
+
+            if [ -z ${REPORT_FILE} ];
+            then
+              echo "Empty or missing environment variable: REPORT_FILE";
+              exit 1;
+            fi;
+
+            if [ -f ${REPORT_FILE} ];  # File exists
+            then
+                echo "Uploading file: ${REPORT_FILE}"
+            else
+                echo "Report not found: ${REPORT_FILE}, exiting."
+                exit 1;
+            fi
+
             # Post the report and save URL
-            REPORT_URL=$(curl -F 'html=@__unmock__/unmock-report.html' https://unmock-ci.azurewebsites.net/reports)
+            REPORT_URL=$(curl -F 'html=@${REPORT_FILE}' https://unmock-ci.azurewebsites.net/reports)
             echo "Uploaded the report to ${REPORT_URL}"
 
             # If running for a pull-request, try sending a notification
@@ -74,4 +94,5 @@ examples:
 
             # run tests!
             - run: yarn test
-            - unmock/upload
+            - unmock/upload:
+                file: "__unmock__/report.html"
