@@ -38,7 +38,7 @@ commands:
             fi
 
             # Post the report and save URL
-            REPORT_URL=$(curl -F 'html=@${REPORT_FILE}' https://unmock-ci.azurewebsites.net/reports)
+            REPORT_URL=$(curl -F 'html=@"'"${REPORT_FILE}"'"' https://unmock-ci.azurewebsites.net/reports)
             echo "Uploaded the report to ${REPORT_URL}"
 
             # If running for a pull-request, try sending a notification
