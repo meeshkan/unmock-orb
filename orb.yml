@@ -4,36 +4,91 @@ description: >
   Repo Home: https://github.com/unmock/unmock-orb
   Website: https://www.unmock.io/
 
+orbs:
+  jq: circleci/jq@1.9.0
+
+parameters: &parameters
+  file:
+    type: string
+    description: "Path to test report"
+    default: "__unmock__/unmock-report.html"
+
+check_report: &check_report
+  name: Check report exists
+  command: |
+    REPORT_FILE=<< parameters.file >>
+
+    if [ -z ${REPORT_FILE} ];
+    then
+      echo "Empty or missing environment variable: REPORT_FILE";
+      exit 1;
+    fi;
+
+    if [ -f ${REPORT_FILE} ];  # File exists
+    then
+        echo "Found file, proceeding with: ${REPORT_FILE}"
+    else
+        echo "Report not found: ${REPORT_FILE}, exiting."
+        exit 1;
+    fi
+
 commands:
   upload:
-    description: "Uploads unmock jest-reporter results and makes a note on your PR if you have a GH integration. The orb is in early alpha stage, and its usage should be considered experimental. Note that the uploaded report will be publicly available on the internet. If your tests in CircleCI use real API keys or tokens for HTTP requests, this orb is not (yet) for you. Any and all feedback is appreciated!"
+    description: "Stores Unmock test report as a CircleCI artifact and makes a note on your PR if you have GitHub integration. The orb is in early alpha stage, and its usage should be considered experimental. Note that the uploaded report will be publicly available on the internet if your CircleCI project is public. Any and all feedback is appreciated!"
+    parameters: *parameters
     steps:
+      - run: *check_report
+      - store_artifacts:
+          path: << parameters.file >>
+      - jq/install
       - run:
-          name: Set exits
+          name: "Determine artifact URL"
           command: |
-            # Exit script if you try to use an uninitialized variable.
-            set -o nounset
-
-            # Exit script if a statement returns a non-true return value.
             set -o errexit
-
-            # Use the error status of the first failure, rather than that of the last item in a pipeline.
             set -o pipefail
+
+            BUILD_ARTIFACTS_URL=https://circleci.com/api/v1.1/project/github/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/${CIRCLE_BUILD_NUM}/artifacts
+            echo "Fetching artifact URL from: ${BUILD_ARTIFACTS_URL}"
+            REPORT_ARTIFACT_URL=$(curl --fail ${BUILD_ARTIFACTS_URL} | jq .[0].url)  # TODO Handle multiple artifacts
+            echo "Your report lives here: ${REPORT_ARTIFACT_URL}. Enjoy!"
+            echo "export REPORT_ARTIFACT_URL=${REPORT_ARTIFACT_URL}" >> $BASH_ENV
       - run:
-          name: Upload file and post notification
+          name: Post notification to the pull request if Unmock GitHub app is installed
           command: |
-            REPORT_URL=$(curl -F 'html=@__unmock__/unmock-report.html' https://unmock-ci.azurewebsites.net/reports)
-            echo "Uploaded the report to $REPORT_URL"
-            if [ ! -z $CIRCLE_PULL_REQUEST ]; then curl --header "Content-Type: application/json" --request POST --data '{"pr":"'"$CIRCLE_PULL_REQUEST"'","sha1":"'"$CIRCLE_SHA1"'","url":"'"$REPORT_URL"'"}' https://unmock-ci.azurewebsites.net/notifications/github; fi
-            echo "Your test report lives here: $REPORT_URL. Enjoy!"
+            set -o errexit
+            set -o pipefail
+
+            if [ -z ${REPORT_ARTIFACT_URL} ];
+            then
+              echo "REPORT_ARTIFACT_URL empty or undefined, exiting";
+              exit 0;
+            fi
+
+            # Try sending a notification if pull-request, allow failure.
+            if [ ! -z ${CIRCLE_PULL_REQUEST} ];
+            then
+              REPLY_CODE=$(curl -i --header "Content-Type: application/json" --request POST --data '{"pr":"'"${CIRCLE_PULL_REQUEST}"'","sha1":"'"${CIRCLE_SHA1}"'","url":"'"${REPORT_ARTIFACT_URL}"'"}' https://unmock-ci.azurewebsites.net/notifications/github |
+              head -n 1 |  # Keep first line of response
+              cut -d$' ' -f2)  # Split the line and take the second value (status code)
+
+              if [ ! ${REPLY_CODE} == 200 ];
+              then
+                echo "Failed sending notification with code ${REPLY_CODE}.";
+              else
+                echo "Sent notification."
+              fi;
+
+            else
+              echo "Not a pull-request, skipping sending notification."
+            fi
 
 examples:
   upload:
-    description: "Upload your Unmock jest-reporter files."
+    description: "Upload your Unmock test reporter files."
     usage:
       version: 2.1
       orbs:
-        unmock: unmock/unmock@0.0.8
+        unmock: unmock/unmock@volatile
       jobs:
         build:
           docker:
@@ -61,4 +116,5 @@ examples:
 
             # run tests!
             - run: yarn test
-            - unmock/upload
+            - unmock/upload:
+                file: "__unmock__/report.html"
