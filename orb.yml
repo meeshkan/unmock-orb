@@ -49,7 +49,12 @@ commands:
 
             BUILD_ARTIFACTS_URL=https://circleci.com/api/v1.1/project/github/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/${CIRCLE_BUILD_NUM}/artifacts
             echo "Fetching artifact URL from: ${BUILD_ARTIFACTS_URL}"
-            REPORT_ARTIFACT_URL=$(curl --fail ${BUILD_ARTIFACTS_URL} | jq .[0].url)  # TODO Handle multiple artifacts
+            REPORT_ARTIFACT_URL=$(curl --fail ${BUILD_ARTIFACTS_URL} | jq .[0].url) || echo "" # TODO Handle multiple artifacts
+            if [ -z ${REPORT_ARTIFACT_URL} ];  # Failed calling the API
+            then
+              # https://circleci.com/gh/unmock/unmock-orb-example/32#artifacts
+              REPORT_ARTIFACT_URL=https://circleci.com/gh/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/${CIRCLE_BUILD_NUM}#artifacts
+            fi
             echo "Your report lives here: ${REPORT_ARTIFACT_URL}. Enjoy!"
             echo "export REPORT_ARTIFACT_URL=${REPORT_ARTIFACT_URL}" >> $BASH_ENV
       - run:
