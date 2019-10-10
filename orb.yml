@@ -34,7 +34,7 @@ check_report: &check_report
 
 commands:
   upload:
-    description: "Stores Unmock test report as a CircleCI artifact and makes a note on your PR if you have GitHub integration. The orb is in early alpha stage, and its usage should be considered experimental. Note that the uploaded report will be publicly available on the internet if your CircleCI project is public. Any and all feedback is appreciated!"
+    description: "Stores Unmock test report as a CircleCI artifact and sends a link in your GitHub PR if you have Unmock GitHub app installed (https://github.com/apps/unmock). Note that the uploaded report will be publicly available on the internet if your CircleCI project is public. Any and all feedback is appreciated!"
     parameters: *parameters
     steps:
       - run: *check_report
