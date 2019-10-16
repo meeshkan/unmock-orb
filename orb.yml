@@ -42,20 +42,20 @@ commands:
         default: "petstore.swagger.io,example.com"
     steps:
       - run:
-          name: "Checkout Unmock server and prepare certificate"
+          name: "Checkout Unmock server"
           command: |
             set -o errexit
             set -o pipefail
             git clone --single-branch --branch unmock-server-dev https://github.com/unmock/unmock-js.git
             cd unmock-js && npm i
       - run:
-          name: "Start server"
+          name: "Prepare certificate, start Unmock proxy and server"
           command: |
             bash unmock-js/packages/unmock-server/scripts/prepare-cert.sh << parameters.domains >>
             DEBUG=unmock* node unmock-js/packages/unmock-server/index.js
           background: true
       - run:
-          name: "Sleep"
+          name: "Set environment variables"
           command: |
             sleep 5
             PROXY_URL=http://localhost:8008
