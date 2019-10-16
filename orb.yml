@@ -35,22 +35,49 @@ check_report: &check_report
 commands:
   start:
     description: "Starts Unmock server and proxy and sets the proxy environment variables."
+    parameters:
+      domains:
+        type: string
+        description: "List of domains you want to mock, required for generating certificates"
+        default: "petstore.swagger.io,example.com"
     steps:
       - run:
-          name: "Checkout repo"
+          name: "Checkout Unmock server and prepare certificate"
           command: |
             set -o errexit
             set -o pipefail
-            git clone --single-branch --branch unmock-server git@github.com:unmock/unmock-js.git
-            cd unmock-js && npm i && npm run compile
-            openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365 -nodes -subj '/CN=*.swagger.io'
-            node unmock-js/packages/unmock-server/index.js &
+            git clone --single-branch --branch unmock-server-dev https://github.com/unmock/unmock-js.git
+            cd unmock-js && npm i
+      - run:
+          name: "Start server"
+          command: |
+            bash unmock-js/packages/unmock-server/scripts/prepare-cert.sh << parameters.domains >>
+            DEBUG=unmock* node unmock-js/packages/unmock-server/index.js
+          background: true
+      - run:
+          name: "Sleep"
+          command: |
+            sleep 5
+            PROXY_URL=http://localhost:8008
+            echo "export HTTP_PROXY=${PROXY_URL}" >> $BASH_ENV
+            echo "export HTTPS_PROXY=${PROXY_URL}" >> $BASH_ENV
+            echo "export http_proxy=${PROXY_URL}" >> $BASH_ENV
+            echo "export https_proxy=${PROXY_URL}" >> $BASH_ENV
+            echo "export SSL_CERT_FILE=cert.pem" >> $BASH_ENV
+  call:
+    description: "Make a test call to Unmock server"
+    steps:
+      - run:
+          name: "Test curl"
+          command: |
+            curl -i http://petstore.swagger.io/v2/pet/23
   stop:
     description: "Stop the server"
     steps:
       - run:
           name: "Kill Node.js processes"
-          command: pgrep node | xargs kill
+          command: |
+            echo $(pgrep node)  # TODO Kill
   upload:
     description: "Stores Unmock test report as a CircleCI artifact and sends a link in your GitHub PR if you have Unmock GitHub app installed (https://github.com/apps/unmock). Note that the uploaded report will be publicly available on the internet if your CircleCI project is public. Any and all feedback is appreciated!"
     parameters: *parameters
