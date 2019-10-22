@@ -75,7 +75,7 @@ commands:
           name: "Test curl"
           command: |
             curl -i http://petstore.swagger.io/v2/pet/23
-  set_code:
+  set:
     description: "Sets unmock to return specific status code"
     parameters:
       code:
