@@ -75,6 +75,17 @@ commands:
           name: "Test curl"
           command: |
             curl -i http://petstore.swagger.io/v2/pet/23
+  set_code:
+    description: "Sets unmock to return specific status code"
+    parameters:
+      code:
+        type: integer
+        description: "Status code you want Unmock to return"
+        default: 200
+    steps:
+      - run:
+          name: "Set Unmock status code"
+          command: curl -X POST http://localhost:8000/api?code=<<parameters.code>>
   stop:
     description: "Stop the server"
     steps:
