@@ -42,6 +42,10 @@ commands:
         default: "petstore.swagger.io,example.com"
     steps:
       - run:
+          name: "Install Node.js"
+          command: |
+            sudo apt-get update && sudo apt-get install -y nodejs npm
+      - run:
           name: "Checkout Unmock server"
           command: |
             set -o errexit
