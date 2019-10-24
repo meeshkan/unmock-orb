@@ -51,7 +51,7 @@ commands:
             set -o errexit
             set -o pipefail
             git clone --single-branch --branch unmock-server https://github.com/unmock/unmock-js.git
-            cd unmock-js && npm i
+            cd unmock-js && npm i && npm run compile
       - run:
           name: "Prepare certificate, start Unmock proxy and server"
           command: |
