@@ -1,6 +1,10 @@
-# unmock-orb
+# [Unmock CircleCI orb](https://circleci.com/orbs/registry/orb/unmock/unmock)
 
-The unmock [CircleCI orb](https://circleci.com/orbs/registry/orb/unmock/unmock).
+[![CircleCI](https://circleci.com/gh/unmock/unmock-orb.svg?style=svg)](https://circleci.com/gh/unmock/unmock-orb)
+
+Use [Unmock](https://unmock.io) to power your CI/CD testing workflows.
+
+See the [orb page](https://circleci.com/orbs/registry/orb/unmock/unmock) for documentation and examples.
 
 ## Development
 
