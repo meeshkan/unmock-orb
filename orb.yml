@@ -76,6 +76,7 @@ commands:
         description: "List of domains you want to mock, required for generating certificates"
         default: "petstore.swagger.io,example.com"
     steps:
+      - setup_remote_docker
       - run:
           name: "Ensure Docker is available"
           command: |
@@ -83,7 +84,7 @@ commands:
       - run:
           name: "Prepare certificate, start Unmock proxy and server"
           command: |
-            docker run -v `pwd`/certs:/app/certs unmock/unmock-server bash build-cert.sh api.github.com certs/
+            docker run -v `pwd`/certs:/app/certs unmock/unmock-server bash build-cert.sh << parameters.domains >> certs/
             docker run -d --rm -p 8000:8000 -p 8008:8008 -p 8443:8443 -v $(pwd)/certs:/app/certs -v $(pwd)/__unmock__:/app/__unmock__ --name unmock-server unmock/unmock-server
           background: true
       - run:
