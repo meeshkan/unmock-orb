@@ -68,6 +68,40 @@ commands:
             echo "export http_proxy=${PROXY_URL}" >> $BASH_ENV
             echo "export https_proxy=${PROXY_URL}" >> $BASH_ENV
             echo "export SSL_CERT_FILE=cert.pem" >> $BASH_ENV
+  start-docker:
+    description: "Starts Unmock server and proxy in Docker and sets the proxy environment variables."
+    parameters:
+      domains:
+        type: string
+        description: "List of domains you want to mock, required for generating certificates"
+        default: "petstore.swagger.io,example.com"
+    steps:
+      - run:
+          name: "Ensure Docker is available"
+          command: |
+            docker pull unmock/unmock-server:latest
+      - run:
+          name: "Prepare certificate, start Unmock proxy and server"
+          command: |
+            docker run -v `pwd`/certs:/app/certs unmock/unmock-server bash build-cert.sh api.github.com certs/
+            docker run -d --rm -p 8000:8000 -p 8008:8008 -p 8443:8443 -v $(pwd)/certs:/app/certs -v $(pwd)/__unmock__:/app/__unmock__ --name unmock-server unmock/unmock-server
+          background: true
+      - run:
+          name: "Set environment variables"
+          command: |
+            sleep 5
+            PROXY_URL=http://localhost:8008
+            echo "export HTTP_PROXY=${PROXY_URL}" >> $BASH_ENV
+            echo "export HTTPS_PROXY=${PROXY_URL}" >> $BASH_ENV
+            echo "export http_proxy=${PROXY_URL}" >> $BASH_ENV
+            echo "export https_proxy=${PROXY_URL}" >> $BASH_ENV
+            echo "export SSL_CERT_FILE=cert.pem" >> $BASH_ENV
+  stop-docker:
+    description: "Stops Unmock Docker"
+    steps:
+      - run:
+          name: "Stop container"
+          command: "docker stop unmock-server"
   call:
     description: "Make a test call to Unmock server"
     steps:
