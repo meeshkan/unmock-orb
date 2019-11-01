@@ -45,7 +45,7 @@ commands:
           command: |
             set -o errexit
             set -o pipefail
-            git clone --single-branch --branch dev https://github.com/unmock/unmock-js.git
+            git clone --single-branch --branch snicallback https://github.com/unmock/unmock-js.git
             cd unmock-js && npm i && npm run compile
       - run:
           name: "Start Unmock proxy and server"
@@ -53,7 +53,7 @@ commands:
             DEBUG=unmock* node unmock-js/packages/unmock-server/index.js
           background: true
       - run:
-          name: "Set environment variables and trust Unmock CA certificate"
+          name: "Set HTTP_PROXY, HTTPS_PROXY and SSL_CERT_FILE environment variables"
           command: |
             wget https://raw.githubusercontent.com/unmock/unmock-js/snicallback/packages/unmock-server/certs/ca.pem
             sleep 5
