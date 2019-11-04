@@ -203,3 +203,38 @@ examples:
             - run: yarn test
             - unmock/upload:
                 file: "__unmock__/report.html"
+  start:
+    description: "Example of using Unmock server for mocking HTTPS traffic, taken from Unmock Golang example https://github.com/unmock/golang-example."
+    usage:
+      version: 2.1
+      orbs:
+        unmock: unmock/unmock@volatile
+
+      jobs:
+        build:
+          working_directory: ~/repo
+          docker:
+            - image: circleci/golang:1.12
+          steps:
+            - checkout
+            - run: go mod download
+            # Start Unmock proxy server in the background and set
+            # HTTP(S)_PROXY environment variables
+            - unmock/start
+            # Set server to return code 200
+            - unmock/set:
+                code: 200
+            # Run tests
+            - run:
+                command: go test
+                environment:
+                  GITHUB_TOKEN: fake-token
+                  # Do not use proxy for gopkg.in
+                  NO_PROXY: gopkg.in
+            - unmock/stop
+
+      workflows:
+        version: 2
+        test-and-build:
+          jobs:
+            - build
