@@ -46,7 +46,7 @@ check_report: &check_report
 
 commands:
   start:
-    description: "Starts Unmock server and proxy and sets the proxy environment variables."
+    description: "Starts Unmock server and proxy and sets the proxy environment variables. NOTE: This command is in pre-alpha and will require (1) installing Node.js and (2) running server from source."
     steps:
       - run:
           name: "Install Node.js"
