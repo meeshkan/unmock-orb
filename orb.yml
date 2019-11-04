@@ -13,6 +13,18 @@ parameters: &parameters
     description: "Path to test report"
     default: "__unmock__/unmock-report.html"
 
+set_environment_variables: &set_environment_variables
+  name: "Download server certificate and set environment variables"
+  command: |
+    wget https://raw.githubusercontent.com/unmock/unmock-js/dev/packages/unmock-server/certs/ca.pem
+    sleep 5
+    PROXY_URL=http://localhost:8008
+    echo "export HTTP_PROXY=${PROXY_URL}" >> $BASH_ENV
+    echo "export HTTPS_PROXY=${PROXY_URL}" >> $BASH_ENV
+    echo "export http_proxy=${PROXY_URL}" >> $BASH_ENV
+    echo "export https_proxy=${PROXY_URL}" >> $BASH_ENV
+    echo "export SSL_CERT_FILE=ca.pem" >> $BASH_ENV
+
 check_report: &check_report
   name: Check report exists
   command: |
@@ -45,24 +57,14 @@ commands:
           command: |
             set -o errexit
             set -o pipefail
-            git clone --single-branch --branch snicallback https://github.com/unmock/unmock-js.git
+            git clone --single-branch --branch dev https://github.com/unmock/unmock-js.git
             cd unmock-js && npm i && npm run compile
       - run:
           name: "Start Unmock proxy and server"
           command: |
             DEBUG=unmock* node unmock-js/packages/unmock-server/index.js
           background: true
-      - run:
-          name: "Set HTTP_PROXY, HTTPS_PROXY and SSL_CERT_FILE environment variables"
-          command: |
-            wget https://raw.githubusercontent.com/unmock/unmock-js/snicallback/packages/unmock-server/certs/ca.pem
-            sleep 5
-            PROXY_URL=http://localhost:8008
-            echo "export HTTP_PROXY=${PROXY_URL}" >> $BASH_ENV
-            echo "export HTTPS_PROXY=${PROXY_URL}" >> $BASH_ENV
-            echo "export http_proxy=${PROXY_URL}" >> $BASH_ENV
-            echo "export https_proxy=${PROXY_URL}" >> $BASH_ENV
-            echo "export SSL_CERT_FILE=ca.pem" >> $BASH_ENV
+      - run: *set_environment_variables
   start-docker:
     description: "Starts Unmock server and proxy in Docker container and sets the proxy environment variables. NOTE: This requires running the job in `machine` executor. Running this in `docker` will NOT work."
     steps:
@@ -76,17 +78,7 @@ commands:
           command: |
             docker run -d --rm -p 8000:8000 -p 8008:8008 -p 8443:8443 -v $(pwd)/__unmock__:/app/__unmock__ --name unmock-server unmock/unmock-server
           background: true
-      - run:
-          name: "Set environment variables"
-          command: |
-            wget https://raw.githubusercontent.com/unmock/unmock-js/snicallback/packages/unmock-server/certs/ca.pem
-            sleep 5
-            PROXY_URL=http://localhost:8008
-            echo "export HTTP_PROXY=${PROXY_URL}" >> $BASH_ENV
-            echo "export HTTPS_PROXY=${PROXY_URL}" >> $BASH_ENV
-            echo "export http_proxy=${PROXY_URL}" >> $BASH_ENV
-            echo "export https_proxy=${PROXY_URL}" >> $BASH_ENV
-            echo "export SSL_CERT_FILE=ca.pem" >> $BASH_ENV
+      - run: *set_environment_variables
   stop-docker:
     description: "Stops Unmock Docker container started with `start-docker` command."
     steps:
