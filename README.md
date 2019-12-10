@@ -1,6 +1,7 @@
 # [Unmock CircleCI orb](https://circleci.com/orbs/registry/orb/unmock/unmock)
 
 [![CircleCI](https://circleci.com/gh/unmock/unmock-orb.svg?style=svg)](https://circleci.com/gh/unmock/unmock-orb)
+[![Chat on Gitter](https://badges.gitter.im/gitterHQ/gitter.png)](https://gitter.im/unmock/community)
 
 Use [Unmock](https://unmock.io) to power your CI/CD testing workflows.
 
