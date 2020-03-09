@@ -1,8 +1,10 @@
 version: 2.1
 description: >
   Use unmock to mock API integrations in your CircleCI builds.
-  Repo Home: https://github.com/unmock/unmock-orb
-  Website: https://www.unmock.io/
+
+display:
+  source_url: https://github.com/unmock/unmock-orb
+  home_url: https://www.unmock.io/
 
 orbs:
   jq: circleci/jq@1.9.0
